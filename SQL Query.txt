@@ -1,0 +1,142 @@
+ALTER TABLE prescriptions ADD COLUMN source ENUM('Inventory','External') DEFAULT 'External';
+ALTER TABLE prescriptions
+DROP FOREIGN KEY prescriptions_ibfk_1;
+
+ALTER TABLE prescriptions
+ADD CONSTRAINT prescriptions_ibfk_1
+FOREIGN KEY (patient_id) REFERENCES patients(id)
+ON DELETE CASCADE;
+
+ALTER TABLE prescriptions
+DROP FOREIGN KEY prescriptions_ibfk_3;
+
+ALTER TABLE prescriptions
+ADD CONSTRAINT prescriptions_ibfk_3
+FOREIGN KEY (medicine_id) REFERENCES medicines(id) ON DELETE CASCADE;
+
+-- Table: patients
+CREATE TABLE patients (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  age INT,
+  gender VARCHAR(10),
+  contact VARCHAR(15),
+  address VARCHAR(255)
+);
+
+-- Table: doctors
+CREATE TABLE doctors (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  specialization VARCHAR(100),
+  contact VARCHAR(15),
+  email VARCHAR(100),
+  phone VARCHAR(20) NOT NULL
+);
+
+-- Table: medicines
+CREATE TABLE medicines (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  category VARCHAR(100),
+  stock INT,
+  price DECIMAL(10,2),
+  quantity INT NOT NULL,
+  expiry_date DATE
+);
+
+-- Table: prescriptions
+CREATE TABLE prescriptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT,
+  doctor_id INT,
+  medicine_id INT,
+  dosage VARCHAR(100),
+  date DATE,
+  prescription_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (doctor_id) REFERENCES doctors(id),
+  FOREIGN KEY (medicine_id) REFERENCES medicines(id)
+);
+
+-- Table: reports
+CREATE TABLE reports (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT,
+  report_type VARCHAR(100),
+  report_date DATE,
+  details TEXT,
+  FOREIGN KEY (patient_id) REFERENCES patients(id)
+);
+-----------------------------------------------------------------------------------------------
+-- Drop the database if it already exists to start fresh
+DROP DATABASE IF EXISTS `healthcare`;
+
+-- Create the new database
+CREATE DATABASE `healthcare`;
+
+-- Select the database to use for the following commands
+USE `healthcare`;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patients`
+--
+CREATE TABLE `patients` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `gender` VARCHAR(10),
+  `contact` VARCHAR(15),
+  `address` VARCHAR(255),
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = Active, 0 = Inactive (Soft Deleted)'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctors`
+--
+CREATE TABLE `doctors` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `specialization` VARCHAR(100),
+  `phone` VARCHAR(20) NOT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = Active, 0 = Inactive (Soft Deleted)'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medicines`
+-- NOTE: The 'stock' and 'quantity' columns from your original files were merged into 'stock' for clarity.
+--
+CREATE TABLE `medicines` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `quantity` INT NOT NULL DEFAULT 0,
+  `price` DECIMAL(10,2),
+  `expiry_date` DATE,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = Active, 0 = Inactive (Soft Deleted)'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `prescriptions`
+-- NOTE: Foreign Keys use ON DELETE RESTRICT to prevent deleting a patient/doctor/medicine if they have prescriptions.
+--
+CREATE TABLE `prescriptions` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `patient_id` INT,
+  `doctor_id` INT,
+  `medicine_id` INT,
+  `dosage` VARCHAR(100),
+  `prescription_date` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`patient_id`) REFERENCES `patients`(`id`) ON DELETE RESTRICT,
+  FOREIGN KEY (`doctor_id`) REFERENCES `doctors`(`id`) ON DELETE RESTRICT,
+  FOREIGN KEY (`medicine_id`) REFERENCES `medicines`(`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
